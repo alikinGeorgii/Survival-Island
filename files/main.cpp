@@ -1,17 +1,12 @@
 #include "state.h"
 #include "survival.h"
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <string>
 
 enum class GameState { Menu, Survival, Expedition };
-
-int hp = 100, food = 100, water = 100, stamina = 100, day = 1;
-static bool foodDone = false;
-static bool waterDone = false;
-static bool trsDone = false;
 
 void mainMenu(sf::RenderWindow &window, GameState &state) {
   static const sf::Texture background("../assets/mainMenu.jpg");
@@ -42,18 +37,18 @@ void mainMenu(sf::RenderWindow &window, GameState &state) {
   window.draw(play);
 }
 
-void gameInterface(sf::RenderWindow &window) {
+void gameInterface(sf::RenderWindow &window, const Player &player) {
   static sf::Font font("../assets/Oswald.ttf");
-  sf::Text info(font, L"День: " + std::to_wstring(day) + L"\nHP: " +
-                          std::to_wstring(hp) + L"\nЕда: " +
-                          std::to_wstring(food) + L"\nВода: " +
-                          std::to_wstring(water) + L"\nСтамина: " +
-                          std::to_wstring(stamina));
+  sf::Text info(font, L"День: " + std::to_wstring(player.day) + L"\nHP: " +
+                          std::to_wstring(player.hp) + L"\nЕда: " +
+                          std::to_wstring(player.food) + L"\nВода: " +
+                          std::to_wstring(player.water) + L"\nСтамина: " +
+                          std::to_wstring(player.stamina));
   info.setPosition({20.f, 20.f});
   window.draw(info);
 }
 
-void runSurvival(sf::RenderWindow &window, GameState &state) {
+void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   static const sf::Texture backg("../assets/beach.jpg");
   static sf::Sprite bg(backg);
   static sf::Font font("../assets/Oswald.ttf");
@@ -87,31 +82,69 @@ void runSurvival(sf::RenderWindow &window, GameState &state) {
   trsText.setPosition({1050.f, 405.f});
   trsText.setFillColor(sf::Color::Black);
 
+  // кнопка: перемотка/конец времени/дня
+  static sf::RectangleShape timeBtn({250.f, 50.f});
+  static sf::Text timeTxt(font, L"");
+  timeTxt.setString(player.time == 3 ? L"Завершить день" : L"Подождать");
+  timeBtn.setPosition({500.f, 650.f});
+  timeBtn.setFillColor(sf::Color::White);
+  timeBtn.setOutlineThickness(-1.5f);
+  timeBtn.setOutlineColor(sf::Color::Black);
+  timeTxt.setPosition({520.f, 655.f});
+  timeTxt.setFillColor(sf::Color::Black);
+
   static bool wasPressed = false;
   bool pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
   if (pressed && !wasPressed) {
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-    if (foodBtn.getGlobalBounds().contains(pos) && !foodDone) {
-      food += rand() % 15 + 1;
-      foodDone = true;
+    if (foodBtn.getGlobalBounds().contains(pos) && !player.foodDone) {
+      player.food += rand() % 15 + 1;
+      player.foodDone = true;
     }
-    if (waterBtn.getGlobalBounds().contains(pos) && !waterDone) {
-      water += rand() % 15 + 1;
-      waterDone = true;
+    if (waterBtn.getGlobalBounds().contains(pos) && !player.waterDone) {
+      player.water += rand() % 15 + 1;
+      player.waterDone = true;
     }
-    if (trsBtn.getGlobalBounds().contains(pos) && !trsDone) {
+    if (trsBtn.getGlobalBounds().contains(pos) && !player.trsDone) {
       // пока ничего
-      trsDone = true;
+      player.trsDone = true;
     }
+    if (timeBtn.getGlobalBounds().contains(pos)) {
+      if (player.time != 3) {
+        player.time++;
+
+        player.food -= rand() % 9 + 1;
+        player.water -= rand() % 9 + 1;
+        if (player.food <= 0 || player.water <= 0) {
+          player.hp -= 15;
+        }
+      } else {
+        player.time = 1;
+        player.day++;
+
+        player.food -= rand() % 15 + 1;
+        player.water -= rand() % 15 + 1;
+        if (player.food <= 0 || player.water <= 0) {
+          player.hp -= 30;
+        }
+      }
+      player.foodDone = false;
+      player.trsDone = false;
+      player.waterDone = false;
+    }
+    player.food = std::clamp(player.food, 0, 100);
+    player.water = std::clamp(player.water, 0, 100);
+    player.hp = std::clamp(player.hp, 0, 100);
   }
   wasPressed = pressed;
-  foodBtn.setFillColor(foodDone ? sf::Color(120, 120, 120) : sf::Color::White);
-  waterBtn.setFillColor(waterDone ? sf::Color(120, 120, 120)
-                                  : sf::Color::White);
-  trsBtn.setFillColor(trsDone ? sf::Color(120, 120, 120) : sf::Color::White);
-
+  foodBtn.setFillColor(player.foodDone ? sf::Color(120, 120, 120)
+                                       : sf::Color::White);
+  waterBtn.setFillColor(player.waterDone ? sf::Color(120, 120, 120)
+                                         : sf::Color::White);
+  trsBtn.setFillColor(player.trsDone ? sf::Color(120, 120, 120)
+                                     : sf::Color::White);
   window.draw(bg);
-  gameInterface(window);
+  gameInterface(window, player);
 
   window.draw(foodBtn);
   window.draw(foodText);
@@ -121,12 +154,17 @@ void runSurvival(sf::RenderWindow &window, GameState &state) {
 
   window.draw(trsBtn);
   window.draw(trsText);
+
+  window.draw(timeBtn);
+  window.draw(timeTxt);
 }
 
 int main() {
   srand(time(nullptr));
 
   sf::RenderWindow window(sf::VideoMode({1280, 720}), "Survival Game");
+
+  Player player;
 
   GameState cur_state = GameState::Menu;
 
@@ -143,7 +181,7 @@ int main() {
     if (cur_state == GameState::Menu) {
       mainMenu(window, cur_state);
     } else if (cur_state == GameState::Survival) {
-      runSurvival(window, cur_state);
+      runSurvival(window, cur_state, player);
     }
 
     // Draw the sprite
