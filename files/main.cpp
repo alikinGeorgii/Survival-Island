@@ -1,4 +1,5 @@
 #include "state.h"
+#include "expeditions.h"
 #include "survival.h"
 #include <SFML/Graphics.hpp>
 #include <algorithm>
@@ -49,6 +50,7 @@ void gameInterface(sf::RenderWindow &window, const Player &player) {
 }
 
 void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
+  
   static const sf::Texture backg("../assets/beach.jpg");
   static sf::Sprite bg(backg);
   static sf::Font font("../assets/Oswald.ttf");
@@ -94,6 +96,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   timeTxt.setFillColor(sf::Color::Black);
 
   static bool wasPressed = false;
+  static std::wstring lastMessage = L"";
   bool pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
   if (pressed && !wasPressed) {
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
@@ -106,7 +109,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
       player.waterDone = true;
     }
     if (trsBtn.getGlobalBounds().contains(pos) && !player.trsDone) {
-      // пока ничего
+      lastMessage = doExpedition(player, Location::Wreck);
       player.trsDone = true;
     }
     if (timeBtn.getGlobalBounds().contains(pos)) {
@@ -155,6 +158,11 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   window.draw(trsBtn);
   window.draw(trsText);
 
+  static sf::Text msg(font, L"");
+  msg.setString(lastMessage);
+  msg.setPosition({20.f, 300.f});
+  msg.setFillColor(sf::Color::White);
+  window.draw(msg);
   window.draw(timeBtn);
   window.draw(timeTxt);
 }
@@ -163,6 +171,8 @@ int main() {
   srand(time(nullptr));
 
   sf::RenderWindow window(sf::VideoMode({1280, 720}), "Survival Game");
+  window.setFramerateLimit(60);
+
   window.setFramerateLimit(60);
 
   Player player;
