@@ -163,6 +163,7 @@ int main() {
   srand(time(nullptr));
 
   sf::RenderWindow window(sf::VideoMode({1280, 720}), "Survival Game");
+  window.setFramerateLimit(60);
 
   Player player;
 
