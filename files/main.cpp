@@ -1,6 +1,7 @@
 #include "state.h"
 #include "survival.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -9,6 +10,8 @@ enum class GameState { Menu, Survival, Expedition };
 
 int hp = 100, food = 100, water = 100, stamina = 100, day = 1;
 static bool foodDone = false;
+static bool waterDone = false;
+static bool trsDone = false;
 
 void mainMenu(sf::RenderWindow &window, GameState &state) {
   static const sf::Texture background("../assets/mainMenu.jpg");
@@ -54,6 +57,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state) {
   static const sf::Texture backg("../assets/beach.jpg");
   static sf::Sprite bg(backg);
   static sf::Font font("../assets/Oswald.ttf");
+  // кнопка: поиск еды
   static sf::RectangleShape foodBtn({200.f, 50.f});
   static sf::Text foodText(font, L"Искать еду");
   foodBtn.setPosition({1050.f, 200.f});
@@ -63,6 +67,26 @@ void runSurvival(sf::RenderWindow &window, GameState &state) {
   foodText.setPosition({1070.f, 205.f});
   foodText.setFillColor(sf::Color::Black);
 
+  // кнопка: поиск воды
+  static sf::RectangleShape waterBtn({200.f, 50.f});
+  static sf::Text waterText(font, L"Искать воду");
+  waterBtn.setPosition({1050.f, 300.f});
+  waterBtn.setFillColor(sf::Color::White);
+  waterBtn.setOutlineColor(sf::Color::Black);
+  waterBtn.setOutlineThickness(-1.5f);
+  waterText.setPosition({1070.f, 305.f});
+  waterText.setFillColor(sf::Color::Black);
+
+  // кнопка: обыск обломков
+  static sf::RectangleShape trsBtn({250.f, 50.f});
+  static sf::Text trsText(font, L"Обыскать обломки");
+  trsBtn.setPosition({1030.f, 400.f});
+  trsBtn.setFillColor(sf::Color::White);
+  trsBtn.setOutlineThickness(-1.5f);
+  trsBtn.setOutlineColor(sf::Color::Black);
+  trsText.setPosition({1050.f, 405.f});
+  trsText.setFillColor(sf::Color::Black);
+
   static bool wasPressed = false;
   bool pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
   if (pressed && !wasPressed) {
@@ -71,14 +95,32 @@ void runSurvival(sf::RenderWindow &window, GameState &state) {
       food += rand() % 15 + 1;
       foodDone = true;
     }
+    if (waterBtn.getGlobalBounds().contains(pos) && !waterDone) {
+      water += rand() % 15 + 1;
+      waterDone = true;
+    }
+    if (trsBtn.getGlobalBounds().contains(pos) && !trsDone) {
+      // пока ничего
+      trsDone = true;
+    }
   }
   wasPressed = pressed;
   foodBtn.setFillColor(foodDone ? sf::Color(120, 120, 120) : sf::Color::White);
+  waterBtn.setFillColor(waterDone ? sf::Color(120, 120, 120)
+                                  : sf::Color::White);
+  trsBtn.setFillColor(trsDone ? sf::Color(120, 120, 120) : sf::Color::White);
 
   window.draw(bg);
   gameInterface(window);
+
   window.draw(foodBtn);
   window.draw(foodText);
+
+  window.draw(waterBtn);
+  window.draw(waterText);
+
+  window.draw(trsBtn);
+  window.draw(trsText);
 }
 
 int main() {
