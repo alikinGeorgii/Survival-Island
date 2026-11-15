@@ -121,6 +121,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
         if (player.food <= 0 || player.water <= 0) {
           player.hp -= 15;
         }
+        player.stamina += rand() % 10 + 5;
       } else {
         player.time = 1;
         player.day++;
@@ -130,6 +131,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
         if (player.food <= 0 || player.water <= 0) {
           player.hp -= 30;
         }
+        player.stamina += rand() % 30 + 20;
       }
       player.foodDone = false;
       player.trsDone = false;
@@ -138,6 +140,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
     player.food = std::clamp(player.food, 0, 100);
     player.water = std::clamp(player.water, 0, 100);
     player.hp = std::clamp(player.hp, 0, 100);
+    player.stamina = std::clamp(player.stamina, 0, 100);
   }
   wasPressed = pressed;
   foodBtn.setFillColor(player.foodDone ? sf::Color(120, 120, 120)

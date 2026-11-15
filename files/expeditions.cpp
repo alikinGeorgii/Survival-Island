@@ -19,6 +19,10 @@ std::wstring doExpedition(Player &player, Location loc) {
       player.water += w;
       result = L"Нашёл припасы: еда +" + std::to_wstring(f) +
                L", вода +" + std::to_wstring(w);
+    } else if(roll < 60){
+      int s = rand() % 20 + 10;
+      player.stamina += s;
+      result = L"Нашёл какао-бобы: выносливость +" + std::to_wstring(s);
     } else if (roll < 85) {
       result = L"Обломки пусты, ничего полезного";
     } else {
@@ -30,6 +34,10 @@ std::wstring doExpedition(Player &player, Location loc) {
       int f = rand() % 20 + 10;
       player.food += f;
       result = L"Нашёл фрукты: еда +" + std::to_wstring(f);
+    } else if (roll < 65) {
+      int s = rand() % 30 + 15;
+      player.stamina += s;
+      result = L"Нашёл какао-бобы: выносливость +" + std::to_wstring(s);
     } else if (roll < 75) {
       result = L"Заблудился и вернулся ни с чем";
     } else {
