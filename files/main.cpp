@@ -1,5 +1,5 @@
-#include "state.h"
 #include "expeditions.h"
+#include "state.h"
 #include "survival.h"
 #include <SFML/Graphics.hpp>
 #include <algorithm>
@@ -50,7 +50,7 @@ void gameInterface(sf::RenderWindow &window, const Player &player) {
 }
 
 void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
-  
+
   static const sf::Texture backg("../assets/beach.jpg");
   static sf::Sprite bg(backg);
   static sf::Font font("../assets/Oswald.ttf");
@@ -101,11 +101,11 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   if (pressed && !wasPressed) {
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
     if (foodBtn.getGlobalBounds().contains(pos) && !player.foodDone) {
-      player.food += rand() % 15 + 1;
+      lastMessage = doExpedition(player, Location::Jungle);
       player.foodDone = true;
     }
     if (waterBtn.getGlobalBounds().contains(pos) && !player.waterDone) {
-      player.water += rand() % 15 + 1;
+      lastMessage = doExpedition(player, Location::Rocks);
       player.waterDone = true;
     }
     if (trsBtn.getGlobalBounds().contains(pos) && !player.trsDone) {
@@ -130,6 +130,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
         if (player.food <= 0 || player.water <= 0) {
           player.hp -= 30;
         }
+        player.stamina = 100;
       }
       player.foodDone = false;
       player.trsDone = false;
@@ -171,8 +172,6 @@ int main() {
   srand(time(nullptr));
 
   sf::RenderWindow window(sf::VideoMode({1280, 720}), "Survival Game");
-  window.setFramerateLimit(60);
-
   window.setFramerateLimit(60);
 
   Player player;
