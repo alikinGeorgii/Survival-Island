@@ -13,3 +13,6 @@ std::wstring randomEvent(Player &player);
 // Доски для концовки «плот»
 extern int planks;
 const int PLANKS_FOR_RAFT = 3;
+
+// Случайное событие в конце дня: меняет параметры игрока, возвращает текст для экрана
+std::wstring randomEvent(Player &player);

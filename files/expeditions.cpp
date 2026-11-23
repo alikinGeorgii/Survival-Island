@@ -70,3 +70,36 @@ std::wstring doExpedition(Player &player, Location loc) {
   player.stamina = std::clamp(player.stamina, 0, 100);
   return result;
 }
+
+std::wstring randomEvent(Player &player) {
+  int roll = rand() % 100;
+  std::wstring result;
+
+  if (roll < 20) {
+    player.hp -= 10;
+    player.water += 15;
+    result = L"Ночью разыгрался шторм: HP -10, но набралась дождевая вода +15";
+  } else if (roll < 40) {
+    int f = rand() % 10 + 5;
+    player.food += f;
+    result = L"Море выбросило на берег рыбу: еда +" + std::to_wstring(f);
+  } else if (roll < 55) {
+    player.hp -= 10;
+    player.stamina -= 15;
+    result = L"Ты заболел: HP -10, стамина -15";
+  } else if (roll < 70) {
+    player.water += 20;
+    result = L"Прошёл ливень: вода +20";
+  } else if (roll < 80) {
+    player.food -= 10;
+    result = L"Чайки растащили часть запасов: еда -10";
+  } else {
+    result = L"Спокойная ночь, ничего не произошло";
+  }
+
+  player.food = std::clamp(player.food, 0, 100);
+  player.water = std::clamp(player.water, 0, 100);
+  player.hp = std::clamp(player.hp, 0, 100);
+  player.stamina = std::clamp(player.stamina, 0, 100);
+  return result;
+}
