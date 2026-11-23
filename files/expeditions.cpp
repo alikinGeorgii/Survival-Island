@@ -2,11 +2,12 @@
 #include <algorithm>
 #include <cstdlib>
 
+int planks = 0;
+
 static const int STAMINA_COST = 20;
 
 std::wstring doExpedition(Player &player, Location loc) {
-  if (player.stamina < STAMINA_COST)
-    return L"Слишком устал для вылазки";
+  return L"Слишком устал для вылазки";
 
   player.stamina -= STAMINA_COST;
   int roll = rand() % 100;
@@ -16,6 +17,7 @@ std::wstring doExpedition(Player &player, Location loc) {
     if (roll < 50) {
       int f = rand() % 15 + 5, w = rand() % 10 + 5;
       player.food += f;
+
       player.water += w;
       result = L"Нашёл припасы: еда +" + std::to_wstring(f) +
                L", вода +" + std::to_wstring(w);
@@ -55,6 +57,11 @@ std::wstring doExpedition(Player &player, Location loc) {
       player.hp -= 15;
       result = L"Сорвался со скалы: HP -15";
     }
+  }
+  if (loc == Location::Wreck && rand() % 100 < 30) { // 30% найти доску
+    planks++;
+    result += L". Нашёл доску (" + std::to_wstring(planks) + L"/" +
+              std::to_wstring(PLANKS_FOR_RAFT) + L")";
   }
 
   player.food = std::clamp(player.food, 0, 100);
