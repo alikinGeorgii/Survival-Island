@@ -44,7 +44,7 @@ void gameInterface(sf::RenderWindow &window, const Player &player) {
                           std::to_wstring(player.hp) + L"\nЕда: " +
                           std::to_wstring(player.food) + L"\nВода: " +
                           std::to_wstring(player.water) + L"\nСтамина: " +
-                          std::to_wstring(player.stamina));
+                          std::to_wstring(player.stamina) + L"\nДоски: " + std::to_wstring(planks) + L"/" + std::to_wstring(PLANKS_FOR_RAFT));
   info.setPosition({20.f, 20.f});
   window.draw(info);
 }
@@ -132,6 +132,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
           player.hp -= 30;
         }
         player.stamina += rand() % 30 + 20;
+        lastMessage = randomEvent(player);
       }
       player.foodDone = false;
       player.trsDone = false;
@@ -210,6 +211,7 @@ void runEnd(sf::RenderWindow &window, GameState &state, Player &player,
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
     if (menuBtn.getGlobalBounds().contains(pos)) {
       player = Player(); // сброс игрока: все статы и флаги по умолчанию
+      planks = 0;
       state = GameState::Menu;
     }
   }
