@@ -4,12 +4,18 @@
 
 int planks = 0;
 
-static const int STAMINA_COST = 20;
+static int staminaCost(Location loc) {
+  if (loc == Location::Wreck)
+    return 20;
+  return 8; // еда (джунгли) и вода (скалы)
+}
 
 std::wstring doExpedition(Player &player, Location loc) {
-  return L"Слишком устал для вылазки";
+  int cost = staminaCost(loc);
+  if (player.stamina < cost)
+    return L"Недостаточно стамины";
 
-  player.stamina -= STAMINA_COST;
+  player.stamina -= cost;
   int roll = rand() % 100;
   std::wstring result;
 
@@ -17,11 +23,10 @@ std::wstring doExpedition(Player &player, Location loc) {
     if (roll < 50) {
       int f = rand() % 15 + 5, w = rand() % 10 + 5;
       player.food += f;
-
       player.water += w;
       result = L"Нашёл припасы: еда +" + std::to_wstring(f) +
                L", вода +" + std::to_wstring(w);
-    } else if(roll < 60){
+    } else if (roll < 60) {
       int s = rand() % 20 + 10;
       player.stamina += s;
       result = L"Нашёл какао-бобы: выносливость +" + std::to_wstring(s);
@@ -58,6 +63,7 @@ std::wstring doExpedition(Player &player, Location loc) {
       result = L"Сорвался со скалы: HP -15";
     }
   }
+
   if (loc == Location::Wreck && rand() % 100 < 30) { // 30% найти доску
     planks++;
     result += L". Нашёл доску (" + std::to_wstring(planks) + L"/" +
