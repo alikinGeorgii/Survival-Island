@@ -7,4 +7,10 @@ struct Player {
   bool trsDone = false;
   int time = 1;
 };
+
+//смена времени и суток
+void advanceTime(Player &player);
+
+//проверка конца игры
+bool checkGameOver(const Player &player);
 #endif // !STATE_H
