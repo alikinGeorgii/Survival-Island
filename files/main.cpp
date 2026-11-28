@@ -2,12 +2,15 @@
 #include "state.h"
 #include "survival.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <string>
 
 enum class GameState { Menu, Survival, Expedition, GameOver, Victory };
+
+static std::wstring lastMessage = L"";
 
 void mainMenu(sf::RenderWindow &window, GameState &state) {
   static const sf::Texture background("../assets/mainMenu.jpg");
@@ -44,15 +47,19 @@ void gameInterface(sf::RenderWindow &window, const Player &player) {
                           std::to_wstring(player.hp) + L"\nЕда: " +
                           std::to_wstring(player.food) + L"\nВода: " +
                           std::to_wstring(player.water) + L"\nСтамина: " +
-                          std::to_wstring(player.stamina) + L"\nДоски: " + std::to_wstring(planks) + L"/" + std::to_wstring(PLANKS_FOR_RAFT));
+                          std::to_wstring(player.stamina) + L"\nДоски: " +
+                          std::to_wstring(planks) + L"/" +
+                          std::to_wstring(PLANKS_FOR_RAFT));
   info.setPosition({20.f, 20.f});
   window.draw(info);
 }
 
 void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
 
-  static const sf::Texture backg("../assets/beach.jpg");
-  static sf::Sprite bg(backg);
+  static const sf::Texture bgM("../assets/beach.jpg");
+  static const sf::Texture bgA("../assets/beachDay.jpg");
+  static const sf::Texture bgE("../assets/beachEvening.jpg");
+  static sf::Sprite bg(bgM);
   static sf::Font font("../assets/Oswald.ttf");
   // кнопка: поиск еды
   static sf::RectangleShape foodBtn({200.f, 50.f});
@@ -96,7 +103,6 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   timeTxt.setFillColor(sf::Color::Black);
 
   static bool wasPressed = false;
-  static std::wstring lastMessage = L"";
   bool pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
   if (pressed && !wasPressed) {
     sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
@@ -113,35 +119,12 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
       player.trsDone = true;
     }
     if (timeBtn.getGlobalBounds().contains(pos)) {
-      if (player.time != 3) {
-        player.time++;
-
-        player.food -= rand() % 9 + 1;
-        player.water -= rand() % 9 + 1;
-        if (player.food <= 0 || player.water <= 0) {
-          player.hp -= 15;
-        }
-        player.stamina += rand() % 10 + 5;
-      } else {
-        player.time = 1;
-        player.day++;
-
-        player.food -= rand() % 15 + 1;
-        player.water -= rand() % 15 + 1;
-        if (player.food <= 0 || player.water <= 0) {
-          player.hp -= 30;
-        }
-        player.stamina += rand() % 30 + 20;
+      advanceTime(player);
+      if (player.time != 1)
+        player.stamina = std::clamp(player.stamina + rand() % 10 + 5, 0, 100);
+      else
         lastMessage = randomEvent(player);
-      }
-      player.foodDone = false;
-      player.trsDone = false;
-      player.waterDone = false;
     }
-    player.food = std::clamp(player.food, 0, 100);
-    player.water = std::clamp(player.water, 0, 100);
-    player.hp = std::clamp(player.hp, 0, 100);
-    player.stamina = std::clamp(player.stamina, 0, 100);
   }
 
   if (player.hp <= 0)
@@ -156,6 +139,13 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
                                          : sf::Color::White);
   trsBtn.setFillColor(player.trsDone ? sf::Color(120, 120, 120)
                                      : sf::Color::White);
+  if (player.time == 1) {
+    bg.setTexture(bgM);
+  } else if (player.time == 2) {
+    bg.setTexture(bgA);
+  } else {
+    bg.setTexture(bgE);
+  }
   window.draw(bg);
   gameInterface(window, player);
 
@@ -212,6 +202,7 @@ void runEnd(sf::RenderWindow &window, GameState &state, Player &player,
     if (menuBtn.getGlobalBounds().contains(pos)) {
       player = Player(); // сброс игрока: все статы и флаги по умолчанию
       planks = 0;
+      lastMessage = L"";
       state = GameState::Menu;
     }
   }
