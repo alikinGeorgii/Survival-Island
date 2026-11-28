@@ -7,7 +7,7 @@
 #include <ctime>
 #include <string>
 
-enum class GameState { Menu, Survival, Expedition };
+enum class GameState { Menu, Survival, Expedition, GameOver, Victory };
 
 void mainMenu(sf::RenderWindow &window, GameState &state) {
   static const sf::Texture background("../assets/mainMenu.jpg");
@@ -44,7 +44,7 @@ void gameInterface(sf::RenderWindow &window, const Player &player) {
                           std::to_wstring(player.hp) + L"\nЕда: " +
                           std::to_wstring(player.food) + L"\nВода: " +
                           std::to_wstring(player.water) + L"\nСтамина: " +
-                          std::to_wstring(player.stamina));
+                          std::to_wstring(player.stamina) + L"\nДоски: " + std::to_wstring(planks) + L"/" + std::to_wstring(PLANKS_FOR_RAFT));
   info.setPosition({20.f, 20.f});
   window.draw(info);
 }
@@ -132,6 +132,7 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
           player.hp -= 30;
         }
         player.stamina += rand() % 30 + 20;
+        lastMessage = randomEvent(player);
       }
       player.foodDone = false;
       player.trsDone = false;
@@ -142,6 +143,12 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
     player.hp = std::clamp(player.hp, 0, 100);
     player.stamina = std::clamp(player.stamina, 0, 100);
   }
+
+  if (player.hp <= 0)
+    state = GameState::GameOver;
+  else if (player.day > 5)
+    state = GameState::Victory;
+
   wasPressed = pressed;
   foodBtn.setFillColor(player.foodDone ? sf::Color(120, 120, 120)
                                        : sf::Color::White);
@@ -170,6 +177,54 @@ void runSurvival(sf::RenderWindow &window, GameState &state, Player &player) {
   window.draw(timeTxt);
 }
 
+void runEnd(sf::RenderWindow &window, GameState &state, Player &player,
+            bool win) {
+  static const sf::Texture backg("../assets/beach.jpg");
+  static sf::Sprite bg(backg);
+  static sf::Font font("../assets/Oswald.ttf");
+
+  static sf::RectangleShape dark({1280.f, 720.f});
+  dark.setFillColor(sf::Color(0, 0, 0, 160));
+
+  static sf::Text title(font, L"", 60);
+  title.setString(win ? L"Вы спаслись!" : L"Вы погибли");
+  title.setPosition({480.f, 250.f});
+  title.setFillColor(win ? sf::Color::Green : sf::Color::Red);
+
+  static sf::Text info(font, L"", 30);
+  info.setString(L"Прожито дней: " + std::to_wstring(player.day - 1));
+  info.setPosition({520.f, 340.f});
+  info.setFillColor(sf::Color::White);
+
+  static sf::RectangleShape menuBtn({200.f, 50.f});
+  static sf::Text menuText(font, L"В меню");
+  menuBtn.setPosition({540.f, 450.f});
+  menuBtn.setFillColor(sf::Color::White);
+  menuBtn.setOutlineThickness(-1.5f);
+  menuBtn.setOutlineColor(sf::Color::Black);
+  menuText.setPosition({600.f, 455.f});
+  menuText.setFillColor(sf::Color::Black);
+
+  static bool wasPressed = false;
+  bool pressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+  if (pressed && !wasPressed) {
+    sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+    if (menuBtn.getGlobalBounds().contains(pos)) {
+      player = Player(); // сброс игрока: все статы и флаги по умолчанию
+      planks = 0;
+      state = GameState::Menu;
+    }
+  }
+  wasPressed = pressed;
+
+  window.draw(bg);
+  window.draw(dark);
+  window.draw(title);
+  window.draw(info);
+  window.draw(menuBtn);
+  window.draw(menuText);
+}
+
 int main() {
   srand(time(nullptr));
 
@@ -194,6 +249,10 @@ int main() {
       mainMenu(window, cur_state);
     } else if (cur_state == GameState::Survival) {
       runSurvival(window, cur_state, player);
+    } else if (cur_state == GameState::GameOver) {
+      runEnd(window, cur_state, player, false);
+    } else if (cur_state == GameState::Victory) {
+      runEnd(window, cur_state, player, true);
     }
 
     // Draw the sprite
